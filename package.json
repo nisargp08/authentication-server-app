@@ -1,7 +1,7 @@
 {
-  "name": "node.js-starter-template",
+  "name": "authentication-server-app",
   "version": "1.0.0",
-  "description": "A node js starter template",
+  "description": "An authentication api server to handle requests for login and signup",
   "main": "index.js",
   "scripts": {
     "build": "babel src --out-dir dist",
@@ -14,6 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
