@@ -8,7 +8,7 @@ export const resSuccess = (res, data, statusCode = 200) => {
 export const resError = (res, err, mode = '') => {
   const errObj = {
     status: err.status,
-    message: err.errorMessage,
+    message: err.message,
   };
   if (mode === 'dev') {
     res.status(err.statusCode).json({

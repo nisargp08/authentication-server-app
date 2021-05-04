@@ -50,16 +50,16 @@ const errorHandler = (err, req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     devError(res, err);
   } else if (process.env.NODE_ENV === 'production') {
-    let error = JSON.parse(JSON.stringify(err));
+    let error = err;
     // Mongo and mongoose errors
-    if (error.name === 'CastError') {
-      error = handleCastError(error);
+    if (err.name === 'CastError') {
+      error = handleCastError(err);
     }
-    if (error.code === 11000) {
-      error = handleDuplicateError(error);
+    if (err.code === 11000) {
+      error = handleDuplicateError(err);
     }
-    if (error.name === 'ValidationError') {
-      error = handleValidationError(error);
+    if (err.name === 'ValidationError') {
+      error = handleValidationError(err);
     }
     prodError(res, error);
   }

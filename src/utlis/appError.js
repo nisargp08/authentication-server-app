@@ -4,7 +4,7 @@ class AppError extends Error {
     super(message);
     // Explicitly assigning message property as the inherited 'message' property
     // get's lost when deepcloning
-    this.errorMessage = message;
+    // this.errorMessage = message;
 
     this.statusCode = statusCode;
     // Status can be either 'fail' or 'error'
