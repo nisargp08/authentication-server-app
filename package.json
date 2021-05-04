@@ -7,7 +7,7 @@
     "build": "babel src --out-dir dist",
     "test": "jest --forceExit --detectOpenHandles  --silent",
     "dev": "nodemon --exec npm restart",
-    "debug" : "rimraf dist && npm run build && ndb nodemon dist/index.js",
+    "debug": "rimraf dist && npm run build && ndb nodemon dist/index.js",
     "restart": "rimraf dist && npm run build && npm run start",
     "start": "node dist/index.js"
   },
