@@ -1,9 +1,12 @@
 import mongoose from 'mongoose';
+import isEmail from 'validator/lib/isEmail';
+import isAlphaNumeric from 'validator/lib/isAlphanumeric';
 
 // Sets 'required' validation message
 const setRequiredMessage = (field) => `${field} is required`;
 const setExistsMessage = (field) => `${field} is taken`;
 const minLengthMessage = (field, char) => `${field} must be of ${char} or more characters`;
+const setAlphaNumericMessage = (field) => `${field} must only contain alphanumeric characters`;
 
 // User model schema
 const userSchema = new mongoose.Schema({
@@ -15,6 +18,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
     minlength: [3, minLengthMessage('Username', 3)],
+    validate: [isAlphaNumeric, setAlphaNumericMessage('Username')],
   },
   name: {
     type: String,
@@ -34,6 +38,7 @@ const userSchema = new mongoose.Schema({
     unique: [true, setExistsMessage('Email')],
     trim: true,
     lowercase: true,
+    validate: [isEmail, 'Please provide a valid email'],
   },
   password: {
     type: String,
