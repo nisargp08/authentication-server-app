@@ -2,6 +2,10 @@ class AppError extends Error {
   constructor(message, statusCode) {
     // To call parent constructor with the message
     super(message);
+    // Explicitly assigning message property as the inherited 'message' property
+    // get's lost when deepcloning
+    this.errorMessage = message;
+
     this.statusCode = statusCode;
     // Status can be either 'fail' or 'error'
     // Set status to 'fail' if status code starts with 4

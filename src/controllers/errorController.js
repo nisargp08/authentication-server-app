@@ -29,8 +29,8 @@ const prodError = (res, err) => {
     // Return jSend error object to client with only required error details
     resError(res, err);
   } else {
-  // When error is from third party packages and other network error
-  // This is to avoid leaking any error details like paths,field names, value ...
+    // When error is from third party packages and other network error
+    // This is to avoid leaking any error details like paths,field names, value ...
     const errObj = {
       statusCode: 500,
       status: 'error',
