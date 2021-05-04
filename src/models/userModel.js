@@ -18,7 +18,6 @@ const userSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: [true, setRequiredMessage('Name')],
     trim: true,
   },
   bio: {
@@ -56,6 +55,8 @@ const userSchema = new mongoose.Schema({
 
 // Mongoose middlewares
 userSchema.pre('save', function passwordConfirm(next) {
+  // Generate name based on the 'username'
+  this.name = this.username;
   // Delete 'passwordConfirm' field
   this.passwordConfirm = undefined;
   next();

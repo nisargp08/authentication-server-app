@@ -1,4 +1,4 @@
-export const resSuccess = (res, statusCode, data) => {
+export const resSuccess = (res, data, statusCode = 200) => {
   res.status(statusCode).json({
     status: 'success',
     data,
@@ -17,6 +17,9 @@ export const resError = (res, err, mode = '') => {
       stack: err.stack,
     });
   } else {
+    // Log the error
+    console.log(err);
+    // Send the error
     res.status(err.statusCode).json({
       ...errObj,
     });
