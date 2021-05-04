@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import isEmail from 'validator/lib/isEmail';
 import isAlphaNumeric from 'validator/lib/isAlphanumeric';
+import bcrypt from 'bcrypt';
 
 // Sets 'required' validation message
 const setRequiredMessage = (field) => `${field} is required`;
@@ -59,12 +60,19 @@ const userSchema = new mongoose.Schema({
 });
 
 // Mongoose middlewares
-userSchema.pre('save', function passwordConfirm(next) {
+userSchema.pre('save', async function passwordConfirm(next) {
   // Generate name based on the 'username'
   this.name = this.username;
+
+  // Check if password is modifier or not
+  if (!this.isModified('password')) return next();
+  // Hash passwords before save
+  this.password = await bcrypt.hash(this.password, 12);
+
   // Delete 'passwordConfirm' field
   this.passwordConfirm = undefined;
-  next();
+
+  return next();
 });
 // User model creation
 const User = mongoose.model('User', userSchema);
