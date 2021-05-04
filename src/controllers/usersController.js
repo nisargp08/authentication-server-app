@@ -12,6 +12,7 @@ const isEmpty = (arr) => {
   }
   return false;
 };
+// eslint-disable-next-line no-unused-vars
 export const createUser = catchAsync(async (req, res, next) => {
   const user = await User.create(req.body);
   // Send successfull response to client returning the details of created user
