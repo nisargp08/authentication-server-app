@@ -12,8 +12,11 @@ import connectDB from './config/db';
 import AppError from './utlis/appError';
 
 // Controller imports
+import { protect } from './controllers/authController';
 import globalErrorHandler from './controllers/errorController';
+
 // Router imports
+import authRouter from './routes/authRoutes';
 import userRouter from './routes/userRoutes';
 
 // Initialize express app
@@ -30,7 +33,8 @@ app.use(morgan('dev'));
 app.get('/', (req, res) => {
   res.json('Welcome to the auth api server');
 });
-app.use('/api/v1/users', userRouter);
+app.use('/api/v1', authRouter);
+app.use('/api/v1/users', protect, userRouter);
 // Default error route
 app.all('*', (req, res, next) => {
   next(new AppError(`Unable to find '${req.originalUrl}' on this server`, 404));
