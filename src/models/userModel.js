@@ -57,7 +57,8 @@ const userSchema = new mongoose.Schema({
       message: 'Passwords do not match',
     },
   },
-});
+  passwordChangedAt: Date,
+}, { timestamps: true });
 
 // Mongoose middlewares
 userSchema.pre('save', async function passwordConfirm(next) {
@@ -74,6 +75,23 @@ userSchema.pre('save', async function passwordConfirm(next) {
 
   return next();
 });
+// Mongoose instance methods
+userSchema.methods.getHashedPassword = async function hashCompare(enteredPassword, actualPassword) {
+  // Compares both hash and returns a boolean value
+  const result = await bcrypt.compare(enteredPassword, actualPassword);
+  return result;
+};
+userSchema.methods.afterPasswordChange = function afterPasswordChange(tokenTimestamp) {
+  // If User has updated the password after initial setup
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    // Password was changed after token initial issue,
+    // thus rendering the token invalid for further use
+    return (tokenTimestamp < changedTimestamp);
+  }
+  // Token is valid for use
+  return false;
+};
 // User model creation
 const User = mongoose.model('User', userSchema);
 

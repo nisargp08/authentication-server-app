@@ -17,6 +17,9 @@ const handleValidationError = (err) => {
   const messages = Object.values(err.errors).map((item) => item.message);
   return new AppError(messages, 400);
 };
+const handleJsonWebTokenError = () => new AppError('Invalid token! Please log in again', 401);
+const handleTokenExpiredError = () => new AppError('Token has expired! Please log in again', 401);
+
 // Error based on environment
 const devError = (res, err) => {
   // Send a detailed response when in dev
@@ -52,15 +55,24 @@ const errorHandler = (err, req, res, next) => {
   } else if (process.env.NODE_ENV === 'production') {
     let error = err;
     // Mongo and mongoose errors
-    if (err.name === 'CastError') {
-      error = handleCastError(err);
+    if (error.name === 'CastError') {
+      error = handleCastError(error);
     }
-    if (err.code === 11000) {
-      error = handleDuplicateError(err);
+    if (error.code === 11000) {
+      error = handleDuplicateError(error);
     }
-    if (err.name === 'ValidationError') {
-      error = handleValidationError(err);
+    if (error.name === 'ValidationError') {
+      error = handleValidationError(error);
     }
+
+    // JWT Errors
+    if (error.name === 'JsonWebTokenError') {
+      error = handleJsonWebTokenError();
+    }
+    if (error.name === 'TokenExpiredError') {
+      error = handleTokenExpiredError();
+    }
+    // Send error response
     prodError(res, error);
   }
 };
