@@ -70,3 +70,9 @@ export const updatePassword = catchAsync(async (req, res, next) => {
   // Send the updated token back to client
   return resSuccess(res, { token });
 });
+
+export const deleteAccount = catchAsync(async (req, res, next) => {
+  // Delete user by getting id from the logged in request
+  await User.findByIdAndDelete(req.user.id);
+  resSuccess(res, null, 204);
+});
