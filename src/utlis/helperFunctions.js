@@ -13,3 +13,16 @@ export const isEmpty = (arr) => {
 export const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, {
   expiresIn: process.env.JWT_EXPIRES_IN,
 });
+
+// Function to return only passed in fields from the entire object
+export const filterObj = (body, fieldsArr) => {
+  const filteredBody = {};
+  if (body && fieldsArr) {
+    Object.keys(body).forEach((key) => {
+      if (fieldsArr.includes(key)) {
+        filteredBody[key] = body[key];
+      }
+    });
+  }
+  return filteredBody;
+};

@@ -15,6 +15,7 @@ const connectDB = (url = dbUrl, opts = {}) => mongoose.connect(url, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
+  useFindAndModify: false,
 });
 
 export default connectDB;

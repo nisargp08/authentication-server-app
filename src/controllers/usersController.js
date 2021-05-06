@@ -2,7 +2,7 @@
 import catchAsync from '../utlis/catchAsync';
 import AppError from '../utlis/appError';
 import { resSuccess } from '../utlis/jSend';
-import { generateToken, isEmpty } from '../utlis/helperFunctions';
+import { filterObj, generateToken, isEmpty } from '../utlis/helperFunctions';
 // Model imports
 import User from '../models/userModel';
 
@@ -27,6 +27,25 @@ export const getUserById = catchAsync(async (req, res, next) => {
 });
 
 // Individual users
+export const updateProfile = catchAsync(async (req, res, next) => {
+  // If user tries to update password the nthrow error
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new AppError(
+        'Cannot update password on this route. Please use "updatePassword" option',
+        400,
+      ),
+    );
+  }
+  // Update user document
+  const filteredBody = filterObj(req.body, ['username', 'name', 'bio', 'phone', 'email']);
+  const updatedData = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true,
+  });
+  return resSuccess(res, updatedData);
+});
+
 export const updatePassword = catchAsync(async (req, res, next) => {
   // Get user from req
   const user = await User.findById(req.user.id).select('+password');
@@ -34,7 +53,9 @@ export const updatePassword = catchAsync(async (req, res, next) => {
   if (!req.body.passwordCurrent) {
     return next(new AppError('Current password is required', 400));
   }
-  if (!(await user.getHashedPassword(req.body.passwordCurrent, user.password))) {
+  if (
+    !(await user.getHashedPassword(req.body.passwordCurrent, user.password))
+  ) {
     return next(new AppError('Your current password is incorrect', 401));
   }
   // Update password
