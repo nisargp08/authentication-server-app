@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
 import { createHash } from 'crypto';
 import { resSuccess } from '../utlis/jSend';
+import { generateToken } from '../utlis/helperFunctions';
 import catchAsync from '../utlis/catchAsync';
 import AppError from '../utlis/appError';
 import sendEmail from '../utlis/emailHandler';
@@ -12,9 +13,6 @@ import User from '../models/userModel';
 
 require('dotenv').config();
 
-const generateToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, {
-  expiresIn: process.env.JWT_EXPIRES_IN,
-});
 // eslint-disable-next-line no-unused-vars
 export const signup = catchAsync(async (req, res, next) => {
   const user = await User.create({
@@ -39,10 +37,7 @@ export const login = catchAsync(async (req, res, next) => {
   }
   // Check if user exists with matching pass
   const user = await User.findOne({
-    $or: [
-      { email: userId },
-      { username: userId },
-    ],
+    $or: [{ email: userId }, { username: userId }],
   }).select('+password');
 
   // If no user found or incorrect password then return error
@@ -57,27 +52,39 @@ export const login = catchAsync(async (req, res, next) => {
 export const protect = catchAsync(async (req, res, next) => {
   // 1.Get token from query parameter
   let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (
+    req.headers.authorization
+    && req.headers.authorization.startsWith('Bearer')
+  ) {
     // eslint-disable-next-line prefer-destructuring
     token = req.headers.authorization.split(' ')[1];
   }
   if (!token) {
-    return next(new AppError('You are not logged in, Please log in to get access', 401));
+    return next(
+      new AppError('You are not logged in, Please log in to get access', 401),
+    );
   }
 
   // 2.Verify jwt legit or not
-  const decodedToken = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  const decodedToken = await promisify(jwt.verify)(
+    token,
+    process.env.JWT_SECRET,
+  );
 
   // 3.Check if user still exists
   const user = await User.findById(decodedToken.id);
   if (!user) {
-    return next(new AppError('The user belonging to the token no longer exists', 401));
+    return next(
+      new AppError('The user belonging to the token no longer exists', 401),
+    );
   }
 
   // 4.Check if password was changed after/before the token was issued
   if (user.afterPasswordChange(decodedToken.iat)) {
     // Password was changed after the token issue date
-    return next(new AppError('Password was recently changed! Please log in again', 401));
+    return next(
+      new AppError('Password was recently changed! Please log in again', 401),
+    );
   }
 
   // Grant access to protected route
@@ -90,14 +97,18 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
   // If user not found
   if (!user) {
-    return next(new AppError(`No user found matching email(${req.body.email})`, 404));
+    return next(
+      new AppError(`No user found matching email(${req.body.email})`, 404),
+    );
   }
   // generate a password reset token
   const resetToken = await user.generateResetToken();
   // Save the encrypted token in db and disable required validation
   await user.save({ validateBeforeSave: false });
 
-  const resetLink = `${req.protocol}://${req.get('host')}${req.baseUrl}/resetPassword/${resetToken}`;
+  const resetLink = `${req.protocol}://${req.get('host')}${
+    req.baseUrl
+  }/resetPassword/${resetToken}`;
   // Email the plain reset token to user in email
   try {
     await sendEmail({
@@ -110,14 +121,22 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     `,
     });
     // Send back a sucess response
-    return resSuccess(res, { message: 'Password reset email has been successfully sent. Valid for next 10 minutes' });
+    return resSuccess(res, {
+      message:
+        'Password reset email has been successfully sent. Valid for next 10 minutes',
+    });
   } catch (err) {
     // Some error occured while sending email
     user.passwordResetToken = undefined;
     user.passwordResetTokenExpiry = undefined;
     await user.save({ validateBeforeSave: false });
     // Return error
-    return next(new AppError('Error occured while sending email. Please try again later', 500));
+    return next(
+      new AppError(
+        'Error occured while sending email. Please try again later',
+        500,
+      ),
+    );
   }
 });
 
@@ -125,7 +144,10 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   // Get token from request parameter
   const { token } = req.params;
   if (!token) {
-    return new AppError('Reset link is required in order to change the password', 400);
+    return new AppError(
+      'Reset link is required in order to change the password',
+      400,
+    );
   }
   // Encrypt the token
   const passwordResetToken = createHash('sha256').update(token).digest('hex');
@@ -135,9 +157,14 @@ export const resetPassword = catchAsync(async (req, res, next) => {
     return next(new AppError('Password reset link not found', 404));
   }
   // If a match is found then check the token expiry
-  const isExpired = (Date.now() > user.passwordResetTokenExpiry);
+  const isExpired = Date.now() > user.passwordResetTokenExpiry;
   if (isExpired) {
-    return next(new AppError('Password reset link has expired. Issue a new one by using "Forgot Password" feature', 401));
+    return next(
+      new AppError(
+        'Password reset link has expired. Issue a new one by using "Forgot Password" feature',
+        401,
+      ),
+    );
   }
   // If token is not expired then get password and passwordConfirm from body
   const { password, passwordConfirm } = req.body;
@@ -149,6 +176,15 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   user.passwordResetTokenExpiry = undefined;
   // Save the user
   await user.save();
+  // Send an email confirming user's password has been successfully changed
+  await sendEmail({
+    to: user.email,
+    subject: 'NP Authentication app password update confirmation',
+    text: `
+    Hi ${user.username},
+    Your password has been successfully updated.
+  `,
+  });
   // Send success response
   return resSuccess(res, { message: 'Password has been successfully changed' });
 });
