@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import isEmail from 'validator/lib/isEmail';
 import isAlphaNumeric from 'validator/lib/isAlphanumeric';
 import bcrypt from 'bcrypt';
+import { createHash, randomBytes } from 'crypto';
 
 // Sets 'required' validation message
 const setRequiredMessage = (field) => `${field} is required`;
@@ -58,6 +59,8 @@ const userSchema = new mongoose.Schema({
     },
   },
   passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetTokenExpiry: Date,
 }, { timestamps: true });
 
 // Mongoose middlewares
@@ -92,6 +95,17 @@ userSchema.methods.afterPasswordChange = function afterPasswordChange(tokenTimes
   // Token is valid for use
   return false;
 };
+userSchema.methods.generateResetToken = async function generateResetToken() {
+  // Generate a random hex string
+  const resetToken = randomBytes(32).toString('hex');
+  // Encrypt it and store it
+  this.passwordResetToken = createHash('sha256').update(resetToken).digest('hex');
+  // Set token expiry date - 10 Minutes
+  this.passwordResetTokenExpiry = Date.now() + 1000 * 60 * 10; // ms * seconds * min = 10minutes
+  // Return plain token
+  return resetToken;
+};
+
 // User model creation
 const User = mongoose.model('User', userSchema);
 

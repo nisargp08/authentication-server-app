@@ -2,9 +2,10 @@
 // Util imports
 import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
+import { resSuccess } from '../utlis/jSend';
 import catchAsync from '../utlis/catchAsync';
 import AppError from '../utlis/appError';
-import { resSuccess } from '../utlis/jSend';
+import sendEmail from '../utlis/emailHandler';
 // Model imports
 import User from '../models/userModel';
 
@@ -81,4 +82,31 @@ export const protect = catchAsync(async (req, res, next) => {
   // Grant access to protected route
   req.user = user;
   return next();
+});
+
+export const forgotPassword = catchAsync(async (req, res, next) => {
+  // Find the provided email from the database
+  const user = await User.findOne({ email: req.body.email });
+  // If user not found
+  if (!user) {
+    return next(new AppError(`No user found matching email(${req.body.email})`, 404));
+  }
+  // generate a password reset token
+  const resetToken = await user.generateResetToken();
+  // Save the encrypted token in db and disable required validation
+  await user.save({ validateBeforeSave: false });
+
+  const resetLink = `${req.protocol}://${req.get('host')}${req.baseUrl}/resetPassword/${resetToken}`;
+  // Email the plain reset token to user in email
+  await sendEmail({
+    to: user.email,
+    subject: 'Reset your NP Authentication app password',
+    text: `
+      Hi ${user.username},
+      We received a request to reset your NP Authentication app password.
+      Link : ${resetLink}
+    `,
+  });
+  // Send back a sucess response
+  return resSuccess(res, { message: 'Password reset email has been successfully sent. Valid for next 10 minutes' });
 });
