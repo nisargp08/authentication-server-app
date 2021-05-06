@@ -2,6 +2,7 @@
 // Util imports
 import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
+import { createHash } from 'crypto';
 import { resSuccess } from '../utlis/jSend';
 import catchAsync from '../utlis/catchAsync';
 import AppError from '../utlis/appError';
@@ -98,15 +99,56 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
 
   const resetLink = `${req.protocol}://${req.get('host')}${req.baseUrl}/resetPassword/${resetToken}`;
   // Email the plain reset token to user in email
-  await sendEmail({
-    to: user.email,
-    subject: 'Reset your NP Authentication app password',
-    text: `
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Reset your NP Authentication app password',
+      text: `
       Hi ${user.username},
       We received a request to reset your NP Authentication app password.
       Link : ${resetLink}
     `,
-  });
-  // Send back a sucess response
-  return resSuccess(res, { message: 'Password reset email has been successfully sent. Valid for next 10 minutes' });
+    });
+    // Send back a sucess response
+    return resSuccess(res, { message: 'Password reset email has been successfully sent. Valid for next 10 minutes' });
+  } catch (err) {
+    // Some error occured while sending email
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpiry = undefined;
+    await user.save({ validateBeforeSave: false });
+    // Return error
+    return next(new AppError('Error occured while sending email. Please try again later', 500));
+  }
+});
+
+export const resetPassword = catchAsync(async (req, res, next) => {
+  // Get token from request parameter
+  const { token } = req.params;
+  if (!token) {
+    return new AppError('Reset link is required in order to change the password', 400);
+  }
+  // Encrypt the token
+  const passwordResetToken = createHash('sha256').update(token).digest('hex');
+  // Find the encrypted token in db
+  const user = await User.findOne({ passwordResetToken });
+  if (!user) {
+    return next(new AppError('Password reset link not found', 404));
+  }
+  // If a match is found then check the token expiry
+  const isExpired = (Date.now() > user.passwordResetTokenExpiry);
+  if (isExpired) {
+    return next(new AppError('Password reset link has expired. Issue a new one by using "Forgot Password" feature', 401));
+  }
+  // If token is not expired then get password and passwordConfirm from body
+  const { password, passwordConfirm } = req.body;
+  // Update the password in db
+  user.password = password;
+  user.passwordConfirm = passwordConfirm;
+  // Remove passwordResetToken and passwordResetTokenExpiry
+  user.passwordResetToken = undefined;
+  user.passwordResetTokenExpiry = undefined;
+  // Save the user
+  await user.save();
+  // Send success response
+  return resSuccess(res, { message: 'Password has been successfully changed' });
 });

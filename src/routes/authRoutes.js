@@ -6,6 +6,6 @@ const router = Router();
 router.post('/login', authController.login);
 router.post('/signup', authController.signup);
 router.patch('/forgotPassword', authController.forgotPassword);
-// router.patch('/resetPassword', authController.resetPassword);
+router.patch('/resetPassword/:token', authController.resetPassword);
 
 export default router;

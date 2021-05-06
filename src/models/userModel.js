@@ -78,6 +78,14 @@ userSchema.pre('save', async function passwordConfirm(next) {
 
   return next();
 });
+userSchema.pre('save', function passwordChangedAt(next) {
+  // If password is never changed or password is new(first time created when account setup)
+  // Then return to next middleware ; No action needed
+  if (!this.isModified('password') || this.isNew) { return next(); }
+  // If password is modified - Update the passwordChangedAt field
+  this.passwordChangedAt = Date.now();
+  return next();
+});
 // Mongoose instance methods
 userSchema.methods.getHashedPassword = async function hashCompare(enteredPassword, actualPassword) {
   // Compares both hash and returns a boolean value
