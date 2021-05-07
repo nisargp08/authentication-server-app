@@ -7,7 +7,7 @@ import { createHash, randomBytes } from 'crypto';
 import isEmail from 'validator/lib/isEmail';
 import isAlphaNumeric from 'validator/lib/isAlphanumeric';
 import AppError from '../utlis/appError';
-import uploadFileToS3 from '../config/aws_s3';
+import { uploadFileToS3, deleteFileFromS3 } from '../config/aws_s3';
 
 // Sets 'required' validation message
 const setRequiredMessage = (field) => `${field} is required`;
@@ -129,6 +129,10 @@ userSchema.methods.getProfilePhoto = async function getProfilePhoto(file, next) 
   }
   // Upload file to S3 and get only url of the file
   const { Location } = await uploadFileToS3(file);
+  // Delete previously stored image if present
+  if (this.profilePhoto) {
+    await deleteFileFromS3(this.profilePhoto);
+  }
   // Return file url
   return Location;
 };

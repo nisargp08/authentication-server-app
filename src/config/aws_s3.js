@@ -14,7 +14,7 @@ const s3 = new S3({
   secretKey,
 });
 
-function uploadFileToS3(file) {
+export function uploadFileToS3(file) {
   const uploadParams = {
     Bucket: bucketName,
     Key: file.formattedName,
@@ -25,4 +25,15 @@ function uploadFileToS3(file) {
   return s3.upload(uploadParams).promise();
 }
 
-export default uploadFileToS3;
+export function deleteFileFromS3(fileUrl) {
+  // Get the file key from fileUrl
+  const keyPattern = fileUrl.split('/');
+  const key = keyPattern[keyPattern.length - 1];
+
+  const deleteParams = {
+    Bucket: bucketName,
+    Key: key,
+  };
+
+  return s3.deleteObject(deleteParams).promise();
+}
