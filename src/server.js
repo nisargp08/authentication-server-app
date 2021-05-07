@@ -6,7 +6,8 @@ import cors from 'cors';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-
+import mongoSanitize from 'express-mongo-sanitize';
+import xss from 'xss-clean';
 // Config imports
 import connectDB from './config/db';
 
@@ -34,8 +35,6 @@ app.use(compression({ level: 6 }));
 // Parsing incoming request bodies
 app.use(json());
 app.use(urlencoded({ extended: true }));
-// Activity logging for dev environment
-app.use(morgan('dev'));
 // Limiter to limit number of requests from an IP
 const limiter = rateLimit({
   max: 100,
@@ -43,6 +42,12 @@ const limiter = rateLimit({
   message: 'Too many service requests from your IP, please try again in an hour!',
 });
 app.use('/api', limiter);
+// Mongo query injection sanitization
+app.use(mongoSanitize());
+// Xss clean
+app.use(xss());
+// Activity logging for dev environment
+app.use(morgan('dev'));
 
 // 3.Routes
 app.get('/', (req, res) => {
