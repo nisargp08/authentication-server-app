@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import cors from 'cors';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
 // Config imports
 import connectDB from './config/db';
@@ -20,14 +21,20 @@ import globalErrorHandler from './controllers/errorController';
 import authRouter from './routes/authRoutes';
 import userRouter from './routes/userRoutes';
 
-// Initialize express app
+// 1.Initialize express app
 const app = express();
 
-// Middlewares
+// 2.Middlewares
+// For setting security http headers
+app.use(helmet());
+// For Cross origin resource sharing
 app.use(cors());
+// Compressing our responses in gzip resulting into smaller response payload
 app.use(compression({ level: 6 }));
+// Parsing incoming request bodies
 app.use(json());
 app.use(urlencoded({ extended: true }));
+// Activity logging for dev environment
 app.use(morgan('dev'));
 // Limiter to limit number of requests from an IP
 const limiter = rateLimit({
@@ -36,7 +43,8 @@ const limiter = rateLimit({
   message: 'Too many service requests from your IP, please try again in an hour!',
 });
 app.use('/api', limiter);
-// Routes
+
+// 3.Routes
 app.get('/', (req, res) => {
   res.json('Welcome to the auth api server');
 });
@@ -47,10 +55,10 @@ app.all('*', (req, res, next) => {
   next(new AppError(`Unable to find '${req.originalUrl}' on this server`, 404));
 });
 
-// Global error handler
+// 4.Global error handler
 app.use(globalErrorHandler);
 
-// Server bootup function
+// 5.Server bootup function
 const startServer = async () => {
   try {
     // Connect to DB
