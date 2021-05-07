@@ -21,8 +21,6 @@ export const signup = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
-  // Generate a JWT and assign it to user document
-  // const token = generateToken(user._id);
   // Send successfull response to client returning the details of created user with JWT
   resSuccess(res, user, 201);
 });
@@ -45,7 +43,9 @@ export const login = catchAsync(async (req, res, next) => {
     return next(new AppError('Invalid Username/Password', 401));
   }
 
-  const token = generateToken(user._id);
+  const token = generateToken(res, user._id);
+  // Setting password undefined to leak the password in response even if it is encrypted
+  user.password = undefined;
   return resSuccess(res, { user, token });
 });
 
