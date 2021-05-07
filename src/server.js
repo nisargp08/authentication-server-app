@@ -4,6 +4,7 @@ import { json, urlencoded } from 'body-parser';
 import morgan from 'morgan';
 import cors from 'cors';
 import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 
 // Config imports
 import connectDB from './config/db';
@@ -28,7 +29,13 @@ app.use(compression({ level: 6 }));
 app.use(json());
 app.use(urlencoded({ extended: true }));
 app.use(morgan('dev'));
-
+// Limiter to limit number of requests from an IP
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000, // So allow only 100 request in one hours from the asme IP
+  message: 'Too many service requests from your IP, please try again in an hour!',
+});
+app.use('/api', limiter);
 // Routes
 app.get('/', (req, res) => {
   res.json('Welcome to the auth api server');
