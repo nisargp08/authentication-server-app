@@ -1,8 +1,13 @@
+// Library imports
 import mongoose from 'mongoose';
-import isEmail from 'validator/lib/isEmail';
-import isAlphaNumeric from 'validator/lib/isAlphanumeric';
 import bcrypt from 'bcrypt';
 import { createHash, randomBytes } from 'crypto';
+
+// Helper functions and classes import
+import isEmail from 'validator/lib/isEmail';
+import isAlphaNumeric from 'validator/lib/isAlphanumeric';
+import AppError from '../utlis/appError';
+import uploadFileToS3 from '../config/aws_s3';
 
 // Sets 'required' validation message
 const setRequiredMessage = (field) => `${field} is required`;
@@ -42,6 +47,7 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     validate: [isEmail, 'Please provide a valid email'],
   },
+  profilePhoto: String,
   password: {
     type: String,
     required: [true, setRequiredMessage('Password')],
@@ -113,7 +119,19 @@ userSchema.methods.generateResetToken = async function generateResetToken() {
   // Return plain token
   return resetToken;
 };
-
+userSchema.methods.getProfilePhoto = async function getProfilePhoto(file, next) {
+  // Formatting file name
+  // eslint-disable-next-line no-param-reassign
+  file.formattedName = `${Date.now().toString()}_${file.originalname.toString().trim().toLowerCase().replace(' ', '_')}`;
+  // Validate file type
+  if (!file.mimetype.match('image/*')) {
+    return next(new AppError('Invalid file type provided. File must be of image type', 400));
+  }
+  // Upload file to S3 and get only url of the file
+  const { Location } = await uploadFileToS3(file);
+  // Return file url
+  return Location;
+};
 // User model creation
 const User = mongoose.model('User', userSchema);
 

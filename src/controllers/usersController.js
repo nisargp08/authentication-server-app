@@ -37,8 +37,13 @@ export const updateProfile = catchAsync(async (req, res, next) => {
       ),
     );
   }
+  // If file was provided in the request
+  if (req.file) {
+    // In that case get image url of s3 bucket object
+    req.body.profilePhoto = await req.user.getProfilePhoto(req.file, next);
+  }
+  const filteredBody = filterObj(req.body, ['username', 'name', 'bio', 'phone', 'email', 'profilePhoto']);
   // Update user document
-  const filteredBody = filterObj(req.body, ['username', 'name', 'bio', 'phone', 'email']);
   const updatedData = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true,
@@ -71,6 +76,7 @@ export const updatePassword = catchAsync(async (req, res, next) => {
   return resSuccess(res, { token });
 });
 
+// eslint-disable-next-line no-unused-vars
 export const deleteAccount = catchAsync(async (req, res, next) => {
   // Delete user by getting id from the logged in request
   await User.findByIdAndDelete(req.user.id);
