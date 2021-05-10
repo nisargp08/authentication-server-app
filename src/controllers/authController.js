@@ -139,6 +139,35 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     );
   }
 });
+export const checkResetToken = catchAsync(async (req, res, next) => {
+// Get token from request parameter
+  const { token } = req.params;
+  if (!token) {
+    return new AppError(
+      'Reset link is required in order to change the password',
+      400,
+    );
+  }
+  // Encrypt the token
+  const passwordResetToken = createHash('sha256').update(token).digest('hex');
+  // Find the encrypted token in db
+  const user = await User.findOne({ passwordResetToken });
+  if (!user) {
+    return next(new AppError('Password reset link not found', 404));
+  }
+  // If a match is found then check the token expiry
+  const isExpired = Date.now() > user.passwordResetTokenExpiry;
+  if (isExpired) {
+    return next(
+      new AppError(
+        'Password reset link has expired. Issue a new one by using "Forgot Password" feature',
+        401,
+      ),
+    );
+  }
+  // Send response
+  return resSuccess(res, { message: 'Valid link' });
+});
 
 export const resetPassword = catchAsync(async (req, res, next) => {
   // Get token from request parameter
