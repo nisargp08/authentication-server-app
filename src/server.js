@@ -8,6 +8,8 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import xss from 'xss-clean';
+import cookieParser from 'cookie-parser';
+
 // Config imports
 import connectDB from './config/db';
 
@@ -46,6 +48,8 @@ app.use('/api', limiter);
 app.use(mongoSanitize());
 // Xss clean
 app.use(xss());
+// Parsing cookies in the request
+app.use(cookieParser());
 // Activity logging for dev environment
 app.use(morgan('dev'));
 

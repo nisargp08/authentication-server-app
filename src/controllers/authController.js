@@ -58,6 +58,8 @@ export const protect = catchAsync(async (req, res, next) => {
   ) {
     // eslint-disable-next-line prefer-destructuring
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.token) {
+    token = req.cookies.token;
   }
   if (!token) {
     return next(
@@ -139,6 +141,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     );
   }
 });
+
 export const checkResetToken = catchAsync(async (req, res, next) => {
 // Get token from request parameter
   const { token } = req.params;
