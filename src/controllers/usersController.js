@@ -18,7 +18,7 @@ export const getAllUsers = catchAsync(async (req, res, next) => {
 
 export const getUserById = catchAsync(async (req, res, next) => {
   // Query db to find the user
-  const user = await User.findById(req.params.id);
+  const user = await User.findOne({ username: req.params.id });
   if (isEmpty(user)) {
     return next(new AppError('No user found with that ID', 404));
   }
