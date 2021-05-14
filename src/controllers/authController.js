@@ -220,3 +220,5 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   // Send success response
   return resSuccess(res, { message: 'Password has been successfully changed' });
 });
+
+export const getUserByToken = catchAsync(async (req, res, next) => resSuccess(res, req.user));

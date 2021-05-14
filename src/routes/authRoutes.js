@@ -8,5 +8,6 @@ router.post('/signup', authController.signup);
 router.patch('/forgotPassword', authController.forgotPassword);
 router.get('/checkResetToken/:token', authController.checkResetToken);
 router.patch('/resetPassword/:token', authController.resetPassword);
+router.get('/byToken', authController.protect, authController.getUserByToken);
 
 export default router;
