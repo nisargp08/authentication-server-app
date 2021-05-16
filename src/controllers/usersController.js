@@ -71,7 +71,7 @@ export const updatePassword = catchAsync(async (req, res, next) => {
 
   // Generate token
   // eslint-disable-next-line no-underscore-dangle
-  const token = generateToken(user._id);
+  const token = generateToken(res, user._id);
   // Send the updated token back to client
   return resSuccess(res, { token });
 });
