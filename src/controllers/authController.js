@@ -222,3 +222,11 @@ export const resetPassword = catchAsync(async (req, res, next) => {
 });
 
 export const getUserByToken = catchAsync(async (req, res, next) => resSuccess(res, req.user));
+
+export const logout = catchAsync(async (req, res, next) => {
+  res.cookie('jwt', 'logout', {
+    expires: new Date(Date.now() + 1000 * 10),
+    httpOnly: true,
+  });
+  resSuccess(res, { status: 'success' });
+});
