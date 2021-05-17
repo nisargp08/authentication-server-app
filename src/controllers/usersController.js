@@ -8,10 +8,6 @@ import User from '../models/userModel';
 
 export const getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.find({});
-  // If no users found send 404
-  if (isEmpty(users)) {
-    return next(new AppError('No users found', 404));
-  }
   // Send successfull response to client returning the details of all users
   return resSuccess(res, users);
 });
