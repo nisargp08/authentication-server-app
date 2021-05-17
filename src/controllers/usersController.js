@@ -78,6 +78,8 @@ export const updatePassword = catchAsync(async (req, res, next) => {
 
 // eslint-disable-next-line no-unused-vars
 export const deleteAccount = catchAsync(async (req, res, next) => {
+  // Remove the profile photo if uploaded
+  await req.user.deleteProfilePhoto();
   // Delete user by getting id from the logged in request
   await User.findByIdAndDelete(req.user.id);
   resSuccess(res, null, 204);

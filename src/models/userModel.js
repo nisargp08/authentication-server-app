@@ -130,11 +130,14 @@ userSchema.methods.getProfilePhoto = async function getProfilePhoto(file, next) 
   // Upload file to S3 and get only url of the file
   const { Location } = await uploadFileToS3(file);
   // Delete previously stored image if present
+  this.deleteProfilePhoto();
+  // Return file url
+  return Location;
+};
+userSchema.methods.deleteProfilePhoto = async function deleteProfilePhoto() {
   if (this.profilePhoto) {
     await deleteFileFromS3(this.profilePhoto);
   }
-  // Return file url
-  return Location;
 };
 // User model creation
 const User = mongoose.model('User', userSchema);
