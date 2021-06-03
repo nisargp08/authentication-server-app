@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import xss from 'xss-clean';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 
 // Config imports
 import connectDB from './config/db';
@@ -51,6 +52,8 @@ app.use(xss());
 app.use(cookieParser());
 // Activity logging for dev environment
 app.use(morgan('dev'));
+// Static files
+app.use(express.static(path.resolve(__dirname, '..', 'public/')));
 
 // 3.Routes
 app.get('/', (req, res) => {

@@ -6,6 +6,7 @@ import { filterObj, generateToken, isEmpty } from '../utlis/helperFunctions';
 // Model imports
 import User from '../models/userModel';
 
+// eslint-disable-next-line no-unused-vars
 export const getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.find({});
   // Send successfull response to client returning the details of all users

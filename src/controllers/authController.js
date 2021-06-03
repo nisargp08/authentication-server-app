@@ -7,7 +7,7 @@ import { resSuccess } from '../utlis/jSend';
 import { generateToken } from '../utlis/helperFunctions';
 import catchAsync from '../utlis/catchAsync';
 import AppError from '../utlis/appError';
-import sendEmail from '../utlis/emailHandler';
+import Email from '../utlis/emailHandler';
 // Model imports
 import User from '../models/userModel';
 
@@ -107,21 +107,9 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   const resetToken = await user.generateResetToken();
   // Save the encrypted token in db and disable required validation
   await user.save({ validateBeforeSave: false });
-
-  const resetLink = `${req.protocol}://${req.get('host')}${
-    req.baseUrl
-  }/resetPassword/${resetToken}`;
   // Email the plain reset token to user in email
   try {
-    await sendEmail({
-      to: user.email,
-      subject: 'Reset your NP Authentication app password',
-      text: `
-      Hi ${user.username},
-      We received a request to reset your NP Authentication app password.
-      Link : ${resetLink}
-    `,
-    });
+    await new Email(req, user).sendResetPassword(resetToken);
     // Send back a sucess response
     return resSuccess(res, {
       message:
@@ -209,20 +197,15 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   // Save the user
   await user.save();
   // Send an email confirming user's password has been successfully changed
-  await sendEmail({
-    to: user.email,
-    subject: 'NP Authentication app password update confirmation',
-    text: `
-    Hi ${user.username},
-    Your password has been successfully updated.
-  `,
-  });
+  await new Email(req, user).sendResetPasswordConfirmation();
   // Send success response
   return resSuccess(res, { message: 'Password has been successfully changed' });
 });
 
+// eslint-disable-next-line no-unused-vars
 export const getUserByToken = catchAsync(async (req, res, next) => resSuccess(res, req.user));
 
+// eslint-disable-next-line no-unused-vars
 export const logout = catchAsync(async (req, res, next) => {
   res.cookie('jwt', 'logout', {
     expires: new Date(Date.now() + 1000 * 10),
