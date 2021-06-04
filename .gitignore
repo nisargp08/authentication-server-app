@@ -1,5 +1,5 @@
 # Upload directory
-public/
+# public/
 # Logs
 logs
 *.log
